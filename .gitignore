@@ -1,7 +1,0 @@
-__pycache__/
-*.pyc
-prices.db
-venv/
-env/
-.env
-.vscode/

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
+    <title>Ryanair Price Checker</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e0e0e0;
+        --text-muted: #a0a0a0;
+        --accent: #2196f3;
+        --accent-hover: #1976d2;
+        --price-color: #ffd700;
+        --error-color: #ff5252;
+        --success-color: #4caf50;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .container {
+        width: 100%;
+        max-width: 480px;
+        padding: 20px;
+      }
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid #333;
+      }
+      h1 {
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        letter-spacing: -0.5px;
+        background: linear-gradient(45deg, #fff, #aaa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .input-group {
+        margin-bottom: 25px;
+      }
+      label {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 16px;
+        background-color: #2c2c2c;
+        border: 2px solid #333;
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+      }
+      input[type="text"]:focus {
+        border-color: var(--accent);
+        background-color: #333;
+      }
+      button {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+      .result-card {
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid #333;
+        display: none;
+        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .info-row {
+        margin-bottom: 18px;
+      }
+      .info-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+      }
+      .info-value {
+        font-size: 1.1rem;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .price-value {
+        font-size: 2.8rem;
+        color: var(--price-color);
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+      }
+      .status-msg {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 0.9rem;
+        min-height: 24px;
+        font-weight: 500;
+      }
+      .loader {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Style dla przypiętych linków */
+      .pinned-container {
+        margin-top: 30px;
+        border-top: 1px solid #333;
+        padding-top: 20px;
+      }
+      .pinned-title {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+      .pinned-item {
+        background-color: #2c2c2c;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .pinned-item:hover {
+        background-color: #333;
+        border-color: var(--accent);
+        transform: translateX(5px);
+      }
+      .pinned-info {
+        font-size: 0.9rem;
+        color: var(--text-main);
+        font-weight: 600;
+      }
+      .pinned-date {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Ryanair Ticket Price Checker</h1>
+        <div class="input-group">
+          <label for="urlInput">Link do biletu</label>
+          <input type="text" id="urlInput" placeholder="Wklej link tutaj..." />
+        </div>
+        <div style="display: flex; gap: 10px">
+          <button onclick="checkPrice()" style="flex: 1">SPRAWDŹ CENĘ</button>
+          <button
+            onclick="pinLink()"
+            style="
+              width: auto;
+              padding: 16px 20px;
+              background: #2c2c2c;
+              border: 1px solid #444;
+            "
+            title="Przypnij ten link"
+          >
+            📌
+          </button>
+        </div>
+
+        <div class="status-msg" id="statusMsg"></div>
+        <div class="loader" id="loader"></div>
+
+        <div class="result-card" id="resultCard">
+          <div class="info-row">
+            <div class="info-label">Trasa</div>
+            <div class="info-value" id="routeVal">-</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Data</div>
+            <div class="info-value" id="dateVal">-</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Aktualna Cena</div>
+            <div class="price-value" id="priceVal">-</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Ostatnia aktualizacja</div>
+            <div
+              class="info-value"
+              style="font-size: 0.9rem; color: #666"
+              id="updateVal"
+            >
+              -
+            </div>
+          </div>
+          <div
+            class="info-row"
+            id="prevPriceRow"
+            style="
+              display: none;
+              border-top: 1px solid #333;
+              padding-top: 15px;
+              margin-top: 15px;
+            "
+          >
+            <div class="info-label" style="color: #2196f3">
+              Poprzednio zapisana cena
+            </div>
+            <div class="info-value" id="prevPriceVal">-</div>
+            <div class="info-label" style="margin-top: 5px; font-size: 0.75rem">
+              Data zapisu: <span id="prevDateVal">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="pinned-container"
+          id="pinnedContainer"
+          style="display: none"
+        >
+          <div class="pinned-title">Przypięte loty</div>
+          <div id="pinnedList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", loadPinnedLinks);
+
+      async function checkPrice() {
+        const urlInput = document.getElementById("urlInput");
+        const statusMsg = document.getElementById("statusMsg");
+        const loader = document.getElementById("loader");
+        const resultCard = document.getElementById("resultCard");
+
+        const ticketUrl = urlInput.value.trim();
+        if (!ticketUrl) {
+          statusMsg.style.color = "var(--error-color)";
+          statusMsg.textContent = "Proszę wkleić link.";
+          return;
+        }
+
+        statusMsg.textContent = "";
+        loader.style.display = "block";
+        resultCard.style.display = "none";
+
+        try {
+          const response = await fetch("/api/check", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: ticketUrl }),
+          });
+
+          const data = await response.json();
+          loader.style.display = "none";
+
+          if (response.ok && data.success) {
+            document.getElementById("routeVal").textContent = data.route;
+            document.getElementById("dateVal").innerHTML = data.date;
+            document.getElementById("priceVal").textContent = data.price;
+            document.getElementById("updateVal").textContent = data.updated;
+
+            if (data.prev_price) {
+              document.getElementById("prevPriceRow").style.display = "block";
+              document.getElementById("prevPriceVal").textContent =
+                data.prev_price;
+              document.getElementById("prevDateVal").textContent =
+                data.prev_date;
+            } else {
+              document.getElementById("prevPriceRow").style.display = "none";
+            }
+
+            resultCard.style.display = "block";
+            statusMsg.style.color = "var(--success-color)";
+            statusMsg.textContent = "Dane pobrane pomyślnie.";
+          } else {
+            statusMsg.style.color = "var(--error-color)";
+            statusMsg.textContent =
+              data.error || "Nie udało się pobrać danych.";
+          }
+        } catch (error) {
+          loader.style.display = "none";
+          statusMsg.style.color = "var(--error-color)";
+          statusMsg.textContent = "Błąd połączenia z serwerem.";
+          console.error(error);
+        }
+      }
+
+      async function pinLink() {
+        const urlInput = document.getElementById("urlInput");
+        const statusMsg = document.getElementById("statusMsg");
+        const url = urlInput.value.trim();
+
+        if (!url) {
+          statusMsg.style.color = "var(--error-color)";
+          statusMsg.textContent = "Wklej link, aby go przypiąć.";
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/pin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: url }),
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            statusMsg.style.color = "var(--success-color)";
+            statusMsg.textContent = "Link przypięty!";
+            renderPinnedLinks(data.links);
+          } else {
+            statusMsg.style.color = "var(--error-color)";
+            statusMsg.textContent = data.error || "Błąd przypinania.";
+          }
+        } catch (e) {
+          console.error(e);
+          statusMsg.textContent = "Błąd połączenia.";
+        }
+      }
+
+      async function loadPinnedLinks() {
+        try {
+          const response = await fetch("/api/pinned");
+          const data = await response.json();
+          if (data.links) {
+            renderPinnedLinks(data.links);
+          }
+        } catch (e) {
+          console.error("Błąd ładowania przypiętych linków", e);
+        }
+      }
+
+      function renderPinnedLinks(links) {
+        const container = document.getElementById("pinnedList");
+        const section = document.getElementById("pinnedContainer");
+
+        if (!links || links.length === 0) {
+          section.style.display = "none";
+          return;
+        }
+
+        section.style.display = "block";
+        container.innerHTML = "";
+
+        links.forEach((link) => {
+          try {
+            const urlObj = new URL(link);
+            const params = new URLSearchParams(urlObj.search);
+
+            // Próba wyciągnięcia parametrów z URL Ryanaira
+            const origin =
+              params.get("originIata") || params.get("tpOriginIata") || "?";
+            const dest =
+              params.get("destinationIata") ||
+              params.get("tpDestinationIata") ||
+              "?";
+            const date =
+              params.get("dateOut") || params.get("tpStartDate") || "?";
+
+            const div = document.createElement("div");
+            div.className = "pinned-item";
+            div.innerHTML = `
+                        <div class="pinned-info">${origin} ➡ ${dest}</div>
+                        <div class="pinned-date">${date}</div>
+                    `;
+            div.onclick = () => {
+              document.getElementById("urlInput").value = link;
+              checkPrice();
+            };
+            container.appendChild(div);
+          } catch (e) {
+            console.error("Nieprawidłowy URL", link);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

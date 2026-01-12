@@ -161,4 +161,4 @@ def check_price_api():
 
 if __name__ == '__main__':
     # run flask
-    app.run(debug=False, port=5000, host='127.0.0.1')
+    app.run(debug=False, port=5678, host='127.0.0.1')

@@ -1,58 +1,57 @@
 # Ticket Price Checker ✈️
 
-Prosta aplikacja webowa napisana w Pythonie (Flask), służąca do śledzenia cen biletów lotniczych linii Ryanair. Aplikacja pozwala na przypinanie interesujących nas połączeń i sprawdzanie ich aktualnych cen oraz historii zmian.
+A simple web application written in Python (Flask) for tracking Ryanair flight ticket prices. The application allows you to pin connections of interest and check their current prices as well as price history.
 
-## 🚀 Funkcjonalności
+## 🚀 Features
 
-- **Śledzenie cen:** Pobieranie aktualnych cen biletów bezpośrednio z API przewoźnika.
-- **Historia cen:** Automatyczne zapisywanie historii cen w lokalnej bazie danych SQLite.
-- **Wykrywanie zmian:** System porównuje aktualną cenę z ostatnią zapisaną i rejestruje tylko zmiany.
-- **Przypinanie linków:** Możliwość zapisania ulubionych tras (linków do wyszukiwarki Ryanair) w celu szybkiego dostępu.
-- **Lekki interfejs:** Proste API zwracające dane w formacie JSON.
+- **Price Tracking:** Fetching current ticket prices directly from the carrier's API.
+- **Price History:** Automatically saving price history in a local SQLite database.
+- **Change Detection:** The system compares the current price with the last saved one and records only changes.
+- **Pinning Links:** Ability to save favorite routes (links to the Ryanair search engine) for quick access.
+- **Lightweight Interface:** Simple API returning data in JSON format.
 
-## 🛠️ Wymagania i Instalacja
+## 🛠️ Requirements and Installation
 
-1.  **Wymagania:** Python 3.x
-2.  **Instalacja zależności:**
+1.  **Requirements:** Python 3.x
+2.  **Install dependencies:**
     ```bash
     pip install flask requests
     ```
 
-## ▶️ Uruchomienie
+## ▶️ Usage
 
-Uruchom główny plik aplikacji:
+Run the main application file:
 
 ```bash
 python ticket.py
 ```
+The application will be available at: `http://127.0.0.1:5678`
 
-Aplikacja będzie dostępna pod adresem: `http://127.0.0.1:5000`
+## 📖 API Documentation
 
-## 📖 Dokumentacja API
+### 1. Check price (`POST /api/check`)
 
-### 1. Sprawdzenie ceny (`POST /api/check`)
-
-Pobiera aktualną cenę dla podanego linku i zapisuje ją w bazie, jeśli uległa zmianie.
-
-- **Body:** `{"url": "https://www.ryanair.com/..."}`
-
-### 2. Przypięcie linku (`POST /api/pin`)
-
-Zapisuje link w bazie "ulubionych".
+Fetches the current price for the provided link and saves it to the database if it has changed.
 
 - **Body:** `{"url": "https://www.ryanair.com/..."}`
 
-### 3. Pobranie przypiętych linków (`GET /api/pinned`)
+### 2. Pin link (`POST /api/pin`)
 
-Zwraca listę wszystkich zapisanych linków.
+Saves the link to the "favorites" database.
 
-## 🗄️ Baza Danych
+- **Body:** `{"url": "https://www.ryanair.com/..."}`
 
-Aplikacja automatycznie tworzy plik `prices.db` przy pierwszym uruchomieniu. Zawiera on dwie tabele:
+### 3. Get pinned links (`GET /api/pinned`)
 
-- `prices`: historia cen (trasa, data lotu, cena, waluta, data sprawdzenia).
-- `pinned_links`: zapisane adresy URL.
+Returns a list of all saved links.
+
+## 🗄️ Database
+
+The application automatically creates a `prices.db` file upon the first run. It contains two tables:
+
+- `prices`: price history (route, flight date, price, currency, check date).
+- `pinned_links`: saved URLs.
 
 ---
 
-**Uwaga:** Aplikacja korzysta z nieoficjalnego API. Używaj odpowiedzialnie.
+**Note:** The application uses an unofficial API. Use responsibly.

@@ -65,7 +65,8 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
-      input[type="text"] {
+      input[type="text"],
+      input[type="date"] {
         width: 100%;
         padding: 16px;
         background-color: #2c2c2c;
@@ -76,8 +77,10 @@
         outline: none;
         transition: all 0.3s ease;
         box-sizing: border-box;
+        color-scheme: dark;
       }
-      input[type="text"]:focus {
+      input[type="text"]:focus,
+      input[type="date"]:focus {
         border-color: var(--accent);
         background-color: #333;
       }
@@ -202,6 +205,16 @@
         font-size: 0.8rem;
         color: var(--text-muted);
       }
+      .or-label {
+        display: inline-block;
+        margin: 0 10px;
+        color: var(--text-muted);
+        font-weight: 600;
+        padding-top: 10px;
+        font-size: 0.9rem;
+        text-align: center;
+        letter-spacing: 1px;
+      }
     </style>
   </head>
   <body>
@@ -211,6 +224,24 @@
         <div class="input-group">
           <label for="urlInput">Link do biletu</label>
           <input type="text" id="urlInput" placeholder="Wklej link tutaj..." />
+          <span class="or-label">lub</span>
+          <div style="margin-top: 15px">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px">
+              <input
+                type="text"
+                id="originInput"
+                placeholder="Wylot (np. WMI)"
+                style="text-transform: uppercase"
+              />
+              <input
+                type="text"
+                id="destInput"
+                placeholder="Przylot (np. ALC)"
+                style="text-transform: uppercase"
+              />
+            </div>
+            <input type="date" id="dateInput" />
+          </div>
         </div>
         <div style="display: flex; gap: 10px">
           <button onclick="checkPrice()" style="flex: 1">SPRAWDŹ CENĘ</button>
@@ -290,15 +321,29 @@
 
       async function checkPrice() {
         const urlInput = document.getElementById("urlInput");
+        const originInput = document.getElementById("originInput");
+        const destInput = document.getElementById("destInput");
+        const dateInput = document.getElementById("dateInput");
         const statusMsg = document.getElementById("statusMsg");
         const loader = document.getElementById("loader");
         const resultCard = document.getElementById("resultCard");
 
-        const ticketUrl = urlInput.value.trim();
+        let ticketUrl = urlInput.value.trim();
+
         if (!ticketUrl) {
-          statusMsg.style.color = "var(--error-color)";
-          statusMsg.textContent = "Proszę wkleić link.";
-          return;
+          const origin = originInput.value.trim().toUpperCase();
+          const dest = destInput.value.trim().toUpperCase();
+          const date = dateInput.value;
+
+          if (origin && dest && date) {
+            // Konstruujemy URL, który backend będzie w stanie przetworzyć
+            ticketUrl = `https://www.ryanair.com/pl/pl/trip/flights/select?originIata=${origin}&destinationIata=${dest}&dateOut=${date}&adults=1`;
+          } else {
+            statusMsg.style.color = "var(--error-color)";
+            statusMsg.textContent =
+              "Wklej link LUB wypełnij pola trasy i daty.";
+            return;
+          }
         }
 
         statusMsg.textContent = "";
@@ -314,6 +359,7 @@
 
           const data = await response.json();
           loader.style.display = "none";
+          console.log("DATA", data);
 
           if (response.ok && data.success) {
             document.getElementById("routeVal").textContent = data.route;
@@ -347,15 +393,43 @@
         }
       }
 
+      function validDate(dateValue) {
+        if (!dateValue) return false;
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const today = `${year}-${month}-${day}`;
+        return dateValue >= today;
+      }
+
       async function pinLink() {
         const urlInput = document.getElementById("urlInput");
         const statusMsg = document.getElementById("statusMsg");
-        const url = urlInput.value.trim();
+        const originInput = document.getElementById("originInput");
+        const destInput = document.getElementById("destInput");
+        const dateInput = document.getElementById("dateInput");
 
+        let url = urlInput.value.trim();
+        let origin = originInput.value.trim().toUpperCase();
+        let dest = destInput.value.trim().toUpperCase();
+        let date = dateInput.value;
+
+        // Jeśli brak URL, próbujemy go zbudować z pól ręcznych
         if (!url) {
-          statusMsg.style.color = "var(--error-color)";
-          statusMsg.textContent = "Wklej link, aby go przypiąć.";
-          return;
+          if (origin && dest && date) {
+            if (!validDate(date)) {
+              statusMsg.style.color = "var(--error-color)";
+              statusMsg.textContent = "Wybierz poprawną datę (przyszłą).";
+              return;
+            }
+            url = `https://www.ryanair.com/pl/pl/trip/flights/select?originIata=${origin}&destinationIata=${dest}&dateOut=${date}&adults=1`;
+          } else {
+            statusMsg.style.color = "var(--error-color)";
+            statusMsg.textContent =
+              "Wklej link LUB wypełnij pola trasy i daty.";
+            return;
+          }
         }
 
         try {
@@ -428,6 +502,7 @@
             div.onclick = () => {
               document.getElementById("urlInput").value = link;
               checkPrice();
+              validDate(document.getElementById("dateInput").value);
             };
             container.appendChild(div);
           } catch (e) {
